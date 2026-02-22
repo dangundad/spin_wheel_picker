@@ -53,70 +53,8 @@ class WheelPage extends GetView<SpinController> {
                     ),
                   ),
                   SizedBox(height: 20.h),
-                  // Spin Button
-                  Obx(() {
-                    final spinning = controller.isSpinning.value;
-                    return GestureDetector(
-                      onTap: controller.spin,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 100.r,
-                        height: 100.r,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient:
-                              spinning
-                                  ? null
-                                  : LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [cs.primary, cs.tertiary],
-                                  ),
-                          color: spinning ? cs.surfaceContainerHigh : null,
-                          boxShadow:
-                              spinning
-                                  ? []
-                                  : [
-                                    BoxShadow(
-                                      color: cs.primary.withValues(alpha: 0.45),
-                                      blurRadius: 24,
-                                      spreadRadius: 4,
-                                    ),
-                                  ],
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            AnimatedRotation(
-                              turns: spinning ? 1 : 0,
-                              duration: const Duration(milliseconds: 4500),
-                              child: Icon(
-                                Icons.rotate_right_rounded,
-                                color:
-                                    spinning
-                                        ? cs.onSurfaceVariant
-                                        : cs.onPrimary,
-                                size: 28.r,
-                              ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              spinning ? 'spinning'.tr : 'spin'.tr,
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w800,
-                                color:
-                                    spinning
-                                        ? cs.onSurfaceVariant
-                                        : cs.onPrimary,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
+                  // Spin Button with breathing glow when idle
+                  _SpinButton(ctrl: controller),
                   SizedBox(height: 20.h),
                   // History
                   Expanded(
@@ -156,6 +94,119 @@ class WheelPage extends GetView<SpinController> {
   }
 }
 
+// ─── Spin Button with Breathing Glow ──────────────────────
+
+class _SpinButton extends StatefulWidget {
+  final SpinController ctrl;
+  const _SpinButton({required this.ctrl});
+
+  @override
+  State<_SpinButton> createState() => _SpinButtonState();
+}
+
+class _SpinButtonState extends State<_SpinButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _breatheCtrl;
+  late Animation<double> _breatheAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _breatheCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+    _breatheAnim = Tween<double>(begin: 1.0, end: 1.04).animate(
+      CurvedAnimation(parent: _breatheCtrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _breatheCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Obx(() {
+      final spinning = widget.ctrl.isSpinning.value;
+      // Stop breathing animation while spinning
+      if (spinning) {
+        _breatheCtrl.stop();
+      } else {
+        if (!_breatheCtrl.isAnimating) {
+          _breatheCtrl.repeat(reverse: true);
+        }
+      }
+
+      return GestureDetector(
+        onTap: widget.ctrl.spin,
+        child: AnimatedBuilder(
+          animation: _breatheAnim,
+          builder: (context, child) {
+            final scale = spinning ? 1.0 : _breatheAnim.value;
+            return Transform.scale(
+              scale: scale,
+              child: child,
+            );
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 100.r,
+            height: 100.r,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: spinning
+                  ? null
+                  : LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [cs.primary, cs.tertiary],
+                    ),
+              color: spinning ? cs.surfaceContainerHigh : null,
+              boxShadow: spinning
+                  ? []
+                  : [
+                      BoxShadow(
+                        color: cs.primary.withValues(alpha: 0.45),
+                        blurRadius: 24,
+                        spreadRadius: 4,
+                      ),
+                    ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedRotation(
+                  turns: spinning ? 1 : 0,
+                  duration: const Duration(milliseconds: 4500),
+                  child: Icon(
+                    Icons.rotate_right_rounded,
+                    color: spinning ? cs.onSurfaceVariant : cs.onPrimary,
+                    size: 28.r,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  spinning ? 'spinning'.tr : 'spin'.tr,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w800,
+                    color: spinning ? cs.onSurfaceVariant : cs.onPrimary,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
+}
+
 // ─── Result Card ──────────────────────────────────────────
 
 class _ResultCard extends StatefulWidget {
@@ -173,6 +224,7 @@ class _ResultCardState extends State<_ResultCard>
   late AnimationController _ctrl;
   late Animation<double> _scaleAnim;
   late Animation<double> _fadeAnim;
+  late Animation<double> _winnerTextScale;
 
   @override
   void initState() {
@@ -189,6 +241,16 @@ class _ResultCardState extends State<_ResultCard>
       begin: 0,
       end: 1,
     ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeIn));
+    // Winner text scale: pop in from 0.5 to 1.0 with elastic bounce
+    _winnerTextScale = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.4, 1.0, curve: Curves.elasticOut),
+      ),
+    );
     _ctrl.forward();
   }
 
@@ -240,14 +302,18 @@ class _ResultCardState extends State<_ResultCard>
                   ),
                 ),
                 SizedBox(height: 6.h),
-                Text(
-                  widget.winner.label,
-                  style: TextStyle(
-                    fontSize: 22.sp,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
+                // Winner name with scale entrance animation
+                ScaleTransition(
+                  scale: _winnerTextScale,
+                  child: Text(
+                    widget.winner.label,
+                    style: TextStyle(
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 12.h),
                 Text(
@@ -313,36 +379,56 @@ class _HistorySection extends StatelessWidget {
                   (it) => it.label == label,
                   orElse: () => WheelItem(label: label, colorValue: 0xFF9E9E9E),
                 );
-                return Container(
-                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-                  decoration: BoxDecoration(
-                    color: Color(item.colorValue).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20.r),
-                    border: Border.all(
-                      color: Color(item.colorValue).withValues(alpha: 0.4),
+                // Slide-in from right with stagger per chip index
+                return TweenAnimationBuilder<double>(
+                  key: ValueKey('$label-$i'),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: Duration(milliseconds: 300 + i * 60),
+                  curve: Curves.easeOutCubic,
+                  builder: (ctx, v, child) {
+                    return Transform.translate(
+                      offset: Offset(40 * (1 - v), 0),
+                      child: Opacity(
+                        opacity: v.clamp(0.0, 1.0),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+                    decoration: BoxDecoration(
+                      color: Color(item.colorValue).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20.r),
+                      border: Border.all(
+                        color: Color(item.colorValue).withValues(alpha: 0.4),
+                      ),
                     ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (i == 0)
-                        Padding(
-                          padding: EdgeInsets.only(right: 4.w),
-                          child: Icon(
-                            Icons.star_rounded,
-                            size: 12.r,
-                            color: Color(item.colorValue),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (i == 0)
+                          Padding(
+                            padding: EdgeInsets.only(right: 4.w),
+                            child: Icon(
+                              Icons.star_rounded,
+                              size: 12.r,
+                              color: Color(item.colorValue),
+                            ),
+                          ),
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontWeight:
+                                i == 0 ? FontWeight.w700 : FontWeight.w500,
+                            color: i == 0
+                                ? Color(item.colorValue)
+                                : cs.onSurface,
                           ),
                         ),
-                      Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: i == 0 ? FontWeight.w700 : FontWeight.w500,
-                          color: i == 0 ? Color(item.colorValue) : cs.onSurface,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
@@ -396,10 +482,9 @@ class _ItemEditSheet extends StatelessWidget {
               ),
               const Spacer(),
               TextButton.icon(
-                onPressed:
-                    wheel.items.length >= 20
-                        ? null
-                        : () => _showAddItemDialog(ctrl, wheel),
+                onPressed: wheel.items.length >= 20
+                    ? null
+                    : () => _showAddItemDialog(ctrl, wheel),
                 icon: const Icon(Icons.add_rounded, size: 18),
                 label: Text('add'.tr),
               ),
@@ -433,22 +518,20 @@ class _ItemEditSheet extends StatelessWidget {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit_rounded, size: 18),
-                          onPressed:
-                              () => _showEditItemDialog(ctrl, wheel, i, item.label),
+                          onPressed: () =>
+                              _showEditItemDialog(ctrl, wheel, i, item.label),
                         ),
                         IconButton(
                           icon: Icon(
                             Icons.delete_rounded,
                             size: 18,
-                            color:
-                                wheel.items.length <= 2
-                                    ? cs.onSurfaceVariant.withValues(alpha: 0.3)
-                                    : cs.error,
+                            color: wheel.items.length <= 2
+                                ? cs.onSurfaceVariant.withValues(alpha: 0.3)
+                                : cs.error,
                           ),
-                          onPressed:
-                              wheel.items.length <= 2
-                                  ? null
-                                  : () => ctrl.removeItem(wheel, i),
+                          onPressed: wheel.items.length <= 2
+                              ? null
+                              : () => ctrl.removeItem(wheel, i),
                         ),
                       ],
                     ),
@@ -473,15 +556,14 @@ class _ItemEditSheet extends StatelessWidget {
           autofocus: true,
           maxLength: 20,
           decoration: InputDecoration(hintText: 'item_hint'.tr),
-          onSubmitted:
-              (_) =>
-                  _saveNewItem(ctrl, wheel, textCtrl.text, textCtrl),
+          onSubmitted: (_) =>
+              _saveNewItem(ctrl, wheel, textCtrl.text, textCtrl),
         ),
         actions: [
           TextButton(onPressed: Get.back, child: Text('cancel'.tr)),
           TextButton(
-            onPressed:
-                () => _saveNewItem(ctrl, wheel, textCtrl.text, textCtrl),
+            onPressed: () =>
+                _saveNewItem(ctrl, wheel, textCtrl.text, textCtrl),
             child: Text('add'.tr),
           ),
         ],
@@ -515,15 +597,14 @@ class _ItemEditSheet extends StatelessWidget {
           controller: textCtrl,
           autofocus: true,
           maxLength: 20,
-          onSubmitted:
-              (_) => _saveEditItem(ctrl, wheel, index, textCtrl.text, textCtrl),
+          onSubmitted: (_) =>
+              _saveEditItem(ctrl, wheel, index, textCtrl.text, textCtrl),
         ),
         actions: [
           TextButton(onPressed: Get.back, child: Text('cancel'.tr)),
           TextButton(
-            onPressed:
-                () =>
-                    _saveEditItem(ctrl, wheel, index, textCtrl.text, textCtrl),
+            onPressed: () =>
+                _saveEditItem(ctrl, wheel, index, textCtrl.text, textCtrl),
             child: Text('save'.tr),
           ),
         ],
