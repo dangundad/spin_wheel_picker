@@ -3,11 +3,19 @@
 // Check in to version control
 
 import 'package:hive_ce/hive_ce.dart';
+import 'package:spin_wheel_picker/app/data/models/spin_wheel.dart';
+import 'package:spin_wheel_picker/app/data/models/wheel_item.dart';
 
 extension HiveRegistrar on HiveInterface {
-  void registerAdapters() {}
+  void registerAdapters() {
+    registerAdapter(SpinWheelAdapter());
+    registerAdapter(WheelItemAdapter());
+  }
 }
 
 extension IsolatedHiveRegistrar on IsolatedHiveInterface {
-  void registerAdapters() {}
+  void registerAdapters() {
+    registerAdapter(SpinWheelAdapter());
+    registerAdapter(WheelItemAdapter());
+  }
 }
