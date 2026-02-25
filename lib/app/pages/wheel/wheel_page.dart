@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
@@ -9,6 +10,7 @@ import 'package:spin_wheel_picker/app/controllers/wheel_controller.dart';
 import 'package:spin_wheel_picker/app/data/models/spin_wheel.dart';
 import 'package:spin_wheel_picker/app/data/models/wheel_item.dart';
 import 'package:spin_wheel_picker/app/pages/wheel/widgets/wheel_painter.dart';
+import 'package:spin_wheel_picker/app/widgets/confetti_overlay.dart';
 
 class WheelPage extends GetView<SpinController> {
   const WheelPage({super.key});
@@ -29,59 +31,78 @@ class WheelPage extends GetView<SpinController> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: Column(
-                children: [
-                  SizedBox(height: 12.h),
-                  // Spin Wheel
-                  Expanded(
-                    flex: 5,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w),
-                      child: Obx(() {
-                        return CustomPaint(
-                          painter: WheelPainter(
-                            items: controller.wheel.items,
-                            angle: controller.angle.value,
-                          ),
-                          child: const SizedBox.expand(),
-                        );
-                      }),
-                    ),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      SizedBox(height: 12.h),
+                      // Spin Wheel
+                      Expanded(
+                        flex: 5,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w),
+                          child: Obx(() {
+                            return CustomPaint(
+                              painter: WheelPainter(
+                                items: controller.wheel.items,
+                                angle: controller.angle.value,
+                              ),
+                              child: const SizedBox.expand(),
+                            );
+                          }),
+                        ),
+                      ),
+                      SizedBox(height: 20.h),
+                      // Spin Button with breathing glow when idle
+                      _SpinButton(ctrl: controller),
+                      SizedBox(height: 20.h),
+                      // History
+                      Expanded(
+                        flex: 2,
+                        child: _HistorySection(ctrl: controller),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 20.h),
-                  // Spin Button with breathing glow when idle
-                  _SpinButton(ctrl: controller),
-                  SizedBox(height: 20.h),
-                  // History
-                  Expanded(
-                    flex: 2,
-                    child: _HistorySection(ctrl: controller),
-                  ),
-                ],
+                ),
+                BannerAdWidget(
+                  adUnitId: AdHelper.bannerAdUnitId,
+                  type: AdHelper.banner,
+                ),
+              ],
+            ),
+          ),
+          // Confetti overlay
+          Obx(() {
+            if (!controller.showConfetti.value) return const SizedBox.shrink();
+            return IgnorePointer(
+              child: ConfettiOverlay(
+                onComplete: () => controller.showConfetti.value = false,
               ),
-            ),
-            BannerAdWidget(
-              adUnitId: AdHelper.bannerAdUnitId,
-              type: AdHelper.banner,
-            ),
-          ],
-        ),
+            );
+          }),
+          // Result overlay
+          Obx(() {
+            if (!controller.showResult.value ||
+                controller.winner.value == null) {
+              return const SizedBox.shrink();
+            }
+            return Positioned(
+              left: 0,
+              right: 0,
+              bottom: 80.h,
+              child: _ResultCard(
+                winner: controller.winner.value!,
+                onDismiss: controller.dismissResult,
+                onShare: controller.shareResult,
+              ),
+            );
+          }),
+        ],
       ),
-      // Result overlay
-      floatingActionButton: Obx(() {
-        if (!controller.showResult.value || controller.winner.value == null) {
-          return const SizedBox.shrink();
-        }
-        return _ResultCard(
-          winner: controller.winner.value!,
-          onDismiss: controller.dismissResult,
-        );
-      }),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
@@ -212,8 +233,9 @@ class _SpinButtonState extends State<_SpinButton>
 class _ResultCard extends StatefulWidget {
   final WheelItem winner;
   final VoidCallback onDismiss;
+  final VoidCallback onShare;
 
-  const _ResultCard({required this.winner, required this.onDismiss});
+  const _ResultCard({required this.winner, required this.onDismiss, required this.onShare});
 
   @override
   State<_ResultCard> createState() => _ResultCardState();
@@ -224,7 +246,6 @@ class _ResultCardState extends State<_ResultCard>
   late AnimationController _ctrl;
   late Animation<double> _scaleAnim;
   late Animation<double> _fadeAnim;
-  late Animation<double> _winnerTextScale;
 
   @override
   void initState() {
@@ -241,16 +262,6 @@ class _ResultCardState extends State<_ResultCard>
       begin: 0,
       end: 1,
     ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeIn));
-    // Winner text scale: pop in from 0.5 to 1.0 with elastic bounce
-    _winnerTextScale = Tween<double>(
-      begin: 0.5,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0.4, 1.0, curve: Curves.elasticOut),
-      ),
-    );
     _ctrl.forward();
   }
 
@@ -302,26 +313,46 @@ class _ResultCardState extends State<_ResultCard>
                   ),
                 ),
                 SizedBox(height: 6.h),
-                // Winner name with scale entrance animation
-                ScaleTransition(
-                  scale: _winnerTextScale,
-                  child: Text(
-                    widget.winner.label,
-                    style: TextStyle(
-                      fontSize: 22.sp,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(height: 12.h),
+                // Winner name with flutter_animate elastic scale
                 Text(
-                  'tap_to_close'.tr,
+                  widget.winner.label,
                   style: TextStyle(
-                    fontSize: 11.sp,
-                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 22.sp,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
                   ),
+                  textAlign: TextAlign.center,
+                )
+                    .animate()
+                    .scale(
+                      begin: const Offset(0.5, 0.5),
+                      end: const Offset(1, 1),
+                      duration: 400.ms,
+                      curve: Curves.elasticOut,
+                    ),
+                SizedBox(height: 12.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: widget.onShare,
+                      icon: const Icon(Icons.share_rounded),
+                      color: Colors.white.withValues(alpha: 0.9),
+                      iconSize: 22.r,
+                      tooltip: 'share'.tr,
+                    ),
+                    SizedBox(width: 8.w),
+                    TextButton(
+                      onPressed: widget.onDismiss,
+                      child: Text(
+                        'tap_to_close'.tr,
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          color: Colors.white.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -394,40 +425,51 @@ class _HistorySection extends StatelessWidget {
                       ),
                     );
                   },
-                  child: Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-                    decoration: BoxDecoration(
-                      color: Color(item.colorValue).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(
-                        color: Color(item.colorValue).withValues(alpha: 0.4),
+                  child: GestureDetector(
+                    onLongPress: () => ctrl.shareHistoryItem(label),
+                    child: Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                      decoration: BoxDecoration(
+                        color: Color(item.colorValue).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20.r),
+                        border: Border.all(
+                          color: Color(item.colorValue).withValues(alpha: 0.4),
+                        ),
                       ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (i == 0)
-                          Padding(
-                            padding: EdgeInsets.only(right: 4.w),
-                            child: Icon(
-                              Icons.star_rounded,
-                              size: 12.r,
-                              color: Color(item.colorValue),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (i == 0)
+                            Padding(
+                              padding: EdgeInsets.only(right: 4.w),
+                              child: Icon(
+                                Icons.star_rounded,
+                                size: 12.r,
+                                color: Color(item.colorValue),
+                              ),
+                            ),
+                          Text(
+                            label,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight:
+                                  i == 0 ? FontWeight.w700 : FontWeight.w500,
+                              color: i == 0
+                                  ? Color(item.colorValue)
+                                  : cs.onSurface,
                             ),
                           ),
-                        Text(
-                          label,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight:
-                                i == 0 ? FontWeight.w700 : FontWeight.w500,
+                          SizedBox(width: 4.w),
+                          Icon(
+                            Icons.share_rounded,
+                            size: 11.r,
                             color: i == 0
-                                ? Color(item.colorValue)
-                                : cs.onSurface,
+                                ? Color(item.colorValue).withValues(alpha: 0.7)
+                                : cs.onSurfaceVariant.withValues(alpha: 0.5),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );

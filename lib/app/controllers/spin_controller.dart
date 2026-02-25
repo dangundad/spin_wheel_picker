@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'package:spin_wheel_picker/app/controllers/wheel_controller.dart';
 import 'package:spin_wheel_picker/app/data/models/spin_wheel.dart';
@@ -17,11 +19,13 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
 
   double _fromAngle = 0;
   double _toAngle = 0;
+  int _lastSectionIndex = -1;
 
   final isSpinning = false.obs;
   final angle = 0.0.obs;
   final winner = Rx<WheelItem?>(null);
   final showResult = false.obs;
+  final showConfetti = false.obs;
 
   @override
   void onInit() {
@@ -38,9 +42,23 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
   }
 
   void _onTick() {
-    angle.value =
+    final newAngle =
         _fromAngle +
         (_toAngle - _fromAngle) * Curves.easeOut.transform(_animCtrl.value);
+    angle.value = newAngle;
+
+    final n = wheel.items.length;
+    if (n > 0) {
+      final segAngle = (2 * math.pi) / n;
+      final normalized = newAngle % (2 * math.pi);
+      final sectionIdx =
+          (((2 * math.pi - normalized) % (2 * math.pi)) / segAngle).floor() %
+          n;
+      if (_lastSectionIndex != -1 && sectionIdx != _lastSectionIndex) {
+        HapticFeedback.selectionClick();
+      }
+      _lastSectionIndex = sectionIdx;
+    }
   }
 
   void spin() {
@@ -48,7 +66,11 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
 
     winner.value = null;
     showResult.value = false;
+    showConfetti.value = false;
     isSpinning.value = true;
+    _lastSectionIndex = -1;
+
+    HapticFeedback.mediumImpact();
 
     final rng = math.Random();
     _fromAngle = angle.value;
@@ -65,6 +87,7 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
       final normalized = _toAngle % (2 * math.pi);
       angle.value = normalized;
       isSpinning.value = false;
+      HapticFeedback.mediumImpact();
       _determineWinner(normalized);
     });
   }
@@ -79,6 +102,7 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
         n;
     winner.value = wheel.items[idx];
     showResult.value = true;
+    showConfetti.value = true;
 
     wheel.resultHistory.insert(0, wheel.items[idx].label);
     if (wheel.resultHistory.length > 20) wheel.resultHistory.removeLast();
@@ -86,5 +110,28 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
     WheelController.to.wheels.refresh();
   }
 
-  void dismissResult() => showResult.value = false;
+  void dismissResult() {
+    showResult.value = false;
+    showConfetti.value = false;
+  }
+
+  Future<void> shareResult() async {
+    final w = winner.value;
+    if (w == null) return;
+    HapticFeedback.lightImpact();
+    await SharePlus.instance.share(
+      ShareParams(
+        text: '🎡 Spin Result: ${w.label}\n\nSpun on: ${wheel.name}',
+      ),
+    );
+  }
+
+  Future<void> shareHistoryItem(String label) async {
+    HapticFeedback.lightImpact();
+    await SharePlus.instance.share(
+      ShareParams(
+        text: '🎡 Spin Result: $label\n\nSpun on: ${wheel.name}',
+      ),
+    );
+  }
 }
