@@ -97,7 +97,7 @@ class HomePage extends GetView<WheelController> {
           backgroundColor: atMax
               ? Get.theme.colorScheme.surfaceContainerHighest
               : null,
-          icon: const Icon(LucideIcons.plusCircle),
+          icon: const Icon(LucideIcons.circlePlus),
           label: Text(
             atMax ? 'max_wheels'.tr : 'new_wheel'.tr,
           ),
@@ -328,7 +328,7 @@ class _EmptyState extends StatelessWidget {
             SizedBox(height: 28.h),
             _GradientButton(
               label: 'new_wheel'.tr,
-              icon: LucideIcons.plusCircle,
+              icon: LucideIcons.circlePlus,
               onTap: onAdd,
             ),
           ],
