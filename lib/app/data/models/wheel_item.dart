@@ -10,5 +10,11 @@ class WheelItem {
   @HiveField(1)
   int colorValue;
 
-  WheelItem({required this.label, required this.colorValue});
+  /// User-chosen color override. If null, colorValue (auto-assigned) is used.
+  @HiveField(2)
+  int? customColorValue;
+
+  WheelItem({required this.label, required this.colorValue, this.customColorValue});
+
+  int get effectiveColorValue => customColorValue ?? colorValue;
 }

@@ -34,7 +34,7 @@ class WheelPainter extends CustomPainter {
 
     for (int i = 0; i < n; i++) {
       final startAngle = -math.pi / 2 + i * segAngle;
-      final color = Color(items[i].colorValue);
+      final color = Color(items[i].effectiveColorValue);
 
       // Segment fill with slight brightness variation for depth
       final fillPaint =

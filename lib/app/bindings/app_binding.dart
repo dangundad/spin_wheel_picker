@@ -1,5 +1,6 @@
 ﻿import 'package:get/get.dart';
 
+import 'package:spin_wheel_picker/app/admob/ads_rewarded.dart';
 import 'package:spin_wheel_picker/app/controllers/setting_controller.dart';
 import 'package:spin_wheel_picker/app/controllers/wheel_controller.dart';
 import 'package:spin_wheel_picker/app/services/hive_service.dart';
@@ -23,6 +24,10 @@ class AppBinding implements Bindings {
 
     if (!Get.isRegistered<HiveService>()) {
       Get.put(HiveService(), permanent: true);
+    }
+
+    if (!Get.isRegistered<RewardedAdManager>()) {
+      Get.put(RewardedAdManager(), permanent: true);
     }
 
     if (!Get.isRegistered<WheelController>()) {

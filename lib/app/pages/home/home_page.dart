@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:spin_wheel_picker/app/admob/ads_banner.dart';
 import 'package:spin_wheel_picker/app/admob/ads_helper.dart';
+import 'package:spin_wheel_picker/app/admob/ads_rewarded.dart';
 import 'package:spin_wheel_picker/app/controllers/wheel_controller.dart';
 import 'package:spin_wheel_picker/app/data/models/spin_wheel.dart';
 import 'package:spin_wheel_picker/app/routes/app_pages.dart';
@@ -16,106 +18,163 @@ class HomePage extends GetView<WheelController> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              cs.primary.withValues(alpha: 0.14),
-              cs.surface,
-              cs.secondaryContainer.withValues(alpha: 0.18),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      appBar: AppBar(
+        title: Row(
+          children: [
+            const Text('🎡', style: TextStyle(fontSize: 22)),
+            SizedBox(width: 8.w),
+            Text(
+              'app_name'.tr,
+              style: TextStyle(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+        centerTitle: false,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(3),
+          child: Container(
+            height: 3,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [cs.primary, cs.tertiary],
+              ),
+            ),
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(16.r),
-                child: _Header(cs: cs, onAdd: _showAddDialog),
-              ),
-              Expanded(
-                child: Obx(() {
-                  if (controller.wheels.isEmpty) {
-                    return _EmptyState(onAdd: _showAddDialog);
-                  }
-                  return ListView.builder(
-                    padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.r),
-                    itemCount: controller.wheels.length,
-                    itemBuilder: (ctx, i) => _WheelCard(
-                      wheel: controller.wheels[i],
-                      onTap: () => Get.toNamed(
-                        Routes.WHEEL,
-                        arguments: controller.wheels[i].id,
-                      ),
-                      onDelete: () => _confirmDelete(controller.wheels[i]),
-                      onRename: () => _showRenameDialog(controller.wheels[i]),
-                    ),
-                  );
-                }),
-              ),
-              Container(
-                color: cs.surface.withValues(alpha: 0.92),
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      left: 12.w,
-                      right: 12.w,
-                      top: 8.h,
-                      bottom: 10.h,
-                    ),
-                    child: BannerAdWidget(
-                      adUnitId: AdHelper.bannerAdUnitId,
-                      type: AdHelper.banner,
-                    ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Obx(() {
+              if (controller.wheels.isEmpty) {
+                return _EmptyState(onAdd: _showAddDialog);
+              }
+              return ListView.builder(
+                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
+                itemCount: controller.wheels.length,
+                itemBuilder: (ctx, i) => _WheelCard(
+                  wheel: controller.wheels[i],
+                  onTap: () => Get.toNamed(
+                    Routes.WHEEL,
+                    arguments: controller.wheels[i].id,
                   ),
+                  onDelete: () => _confirmDelete(controller.wheels[i]),
+                  onRename: () => _showRenameDialog(controller.wheels[i]),
+                ),
+              );
+            }),
+          ),
+          Container(
+            color: cs.surface.withValues(alpha: 0.92),
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 12.w,
+                  right: 12.w,
+                  top: 8.h,
+                  bottom: 10.h,
+                ),
+                child: BannerAdWidget(
+                  adUnitId: AdHelper.bannerAdUnitId,
+                  type: AdHelper.banner,
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddDialog,
-        icon: const Icon(Icons.auto_awesome_motion_rounded),
-        label: Text('new_wheel'.tr),
-      ),
+      floatingActionButton: Obx(() {
+        final count = controller.wheels.length;
+        final atMax = count >= WheelController.maxWheels;
+        return FloatingActionButton.extended(
+          onPressed: atMax ? null : _showAddDialog,
+          backgroundColor: atMax
+              ? Get.theme.colorScheme.surfaceContainerHighest
+              : null,
+          icon: const Icon(LucideIcons.plusCircle),
+          label: Text(
+            atMax ? 'max_wheels'.tr : 'new_wheel'.tr,
+          ),
+        );
+      }),
     );
   }
 
   void _showAddDialog() {
     final textCtrl = TextEditingController();
+    final needsAd = controller.wheels.isNotEmpty;
     Get.dialog(
       AlertDialog(
         title: Text('new_wheel'.tr),
-        content: TextField(
-          controller: textCtrl,
-          autofocus: true,
-          maxLength: 30,
-          decoration: InputDecoration(
-            hintText: 'wheel_name_hint'.tr,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
-          ),
-          onSubmitted: (_) => _saveWheel(textCtrl.text),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: textCtrl,
+              autofocus: true,
+              maxLength: 30,
+              decoration: InputDecoration(
+                hintText: 'wheel_name_hint'.tr,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+              ),
+              onSubmitted: (_) => _saveWheel(textCtrl.text, needsAd),
+            ),
+            if (needsAd) ...[
+              SizedBox(height: 8.h),
+              Obx(() {
+                final ready = Get.isRegistered<RewardedAdManager>() &&
+                    RewardedAdManager.to.isAdReady.value;
+                return Row(
+                  children: [
+                    Icon(
+                      Icons.ondemand_video_rounded,
+                      size: 16.r,
+                      color: ready
+                          ? Get.theme.colorScheme.tertiary
+                          : Get.theme.colorScheme.onSurfaceVariant,
+                    ),
+                    SizedBox(width: 6.w),
+                    Text(
+                      'add_wheel_ad'.tr,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: Get.theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ],
+          ],
         ),
         actions: [
           TextButton(onPressed: Get.back, child: Text('cancel'.tr)),
           FilledButton(
-            onPressed: () => _saveWheel(textCtrl.text),
-            child: Text('create'.tr),
+            onPressed: () => _saveWheel(textCtrl.text, needsAd),
+            child: Text(needsAd ? 'add_wheel_ad'.tr : 'create'.tr),
           ),
         ],
       ),
     );
   }
 
-  void _saveWheel(String text) {
+  void _saveWheel(String text, bool needsAd) {
     final name = text.trim();
     if (name.isEmpty) return;
-    controller.addWheel(name);
     Get.back();
+    if (needsAd) {
+      controller.requestAddWheelWithAd(name);
+    } else {
+      controller.addWheel(name);
+    }
   }
 
   void _showRenameDialog(SpinWheel wheel) {
@@ -171,63 +230,68 @@ class HomePage extends GetView<WheelController> {
   }
 }
 
-class _Header extends StatelessWidget {
-  final ColorScheme cs;
-  final VoidCallback onAdd;
+// ── Gradient CTA Button ────────────────────────────────────────────────────
+class _GradientButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
 
-  const _Header({required this.cs, required this.onAdd});
+  const _GradientButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final cs = Get.theme.colorScheme;
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(18.r),
-        border: Border.all(color: cs.outline.withValues(alpha: 0.25)),
+        gradient: LinearGradient(
+          colors: [cs.primary, cs.tertiary],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: cs.primary.withValues(alpha: 0.35),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
-      padding: EdgeInsets.all(16.r),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.9, end: 1),
-                duration: const Duration(milliseconds: 650),
-                curve: Curves.easeOutBack,
-                builder: (context, value, child) => Transform.scale(
-                  scale: value,
-                  child: child,
-                ),
-                child: const Text('🎡', style: TextStyle(fontSize: 34)),
-              ),
-              SizedBox(width: 10.w),
-              Expanded(
-                child: Text(
-                  'app_name'.tr,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16.r),
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 16.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 22.r, color: cs.onPrimary),
+                SizedBox(width: 10.w),
+                Text(
+                  label,
                   style: TextStyle(
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.w900,
-                    color: cs.onSurface,
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: cs.onPrimary,
                   ),
                 ),
-              ),
-              FilledButton.icon(
-                onPressed: onAdd,
-                icon: const Icon(Icons.add_rounded),
-                label: Text('new_wheel'.tr),
-                style: FilledButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-          SizedBox(height: 8.h),
-        ],
+        ),
       ),
     );
   }
 }
 
+// ── Empty State ────────────────────────────────────────────────────────────
 class _EmptyState extends StatelessWidget {
   final VoidCallback onAdd;
   const _EmptyState({required this.onAdd});
@@ -242,7 +306,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.sports_esports_rounded,
+              LucideIcons.ferrisWheel,
               size: 74.r,
               color: cs.primary.withValues(alpha: 0.4),
             ),
@@ -250,9 +314,9 @@ class _EmptyState extends StatelessWidget {
             Text(
               'no_wheels'.tr,
               style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-                color: cs.onSurfaceVariant,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w700,
+                color: cs.onSurface,
               ),
             ),
             SizedBox(height: 8.h),
@@ -261,55 +325,11 @@ class _EmptyState extends StatelessWidget {
               style: TextStyle(fontSize: 13.sp, color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 20.h),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [cs.primary, cs.tertiary],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                borderRadius: BorderRadius.circular(16.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: cs.primary.withValues(alpha: 0.35),
-                    blurRadius: 14,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16.r),
-                  onTap: onAdd,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 28.w,
-                      vertical: 14.h,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.add_rounded,
-                          size: 22.r,
-                          color: cs.onPrimary,
-                        ),
-                        SizedBox(width: 8.w),
-                        Text(
-                          'new_wheel'.tr,
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: cs.onPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+            SizedBox(height: 28.h),
+            _GradientButton(
+              label: 'new_wheel'.tr,
+              icon: LucideIcons.plusCircle,
+              onTap: onAdd,
             ),
           ],
         ),
@@ -318,6 +338,7 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
+// ── Wheel Card ─────────────────────────────────────────────────────────────
 class _WheelCard extends StatelessWidget {
   final SpinWheel wheel;
   final VoidCallback onTap;
@@ -334,53 +355,78 @@ class _WheelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final colors = wheel.items.map((i) => Color(i.colorValue)).toList();
+    final colors = wheel.items.map((i) => Color(i.effectiveColorValue)).toList();
 
     return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
+      margin: EdgeInsets.only(bottom: 14.h),
       decoration: BoxDecoration(
         color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
-            color: cs.primary.withValues(alpha: 0.08),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+            color: cs.primary.withValues(alpha: 0.10),
+            blurRadius: 18,
+            offset: const Offset(0, 5),
           ),
           BoxShadow(
-            color: cs.shadow.withValues(alpha: 0.06),
-            blurRadius: 6,
+            color: cs.shadow.withValues(alpha: 0.07),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(20.r),
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
           child: Row(
             children: [
+              // 색상 미리보기 — 원형 색상 스택
               SizedBox(
-                width: 50.r,
-                height: 50.r,
+                width: 54.r,
+                height: 54.r,
                 child: Stack(
-                  children: List.generate(
-                    colors.length.clamp(0, 4),
-                    (i) => Positioned(
-                      left: (i * 10.0).toDouble(),
-                      top: 0,
-                      child: Container(
-                        width: 30.r,
-                        height: 30.r,
-                        decoration: BoxDecoration(
-                          color: colors[i],
-                          shape: BoxShape.circle,
-                          border: Border.all(color: cs.surface, width: 2),
+                  children: [
+                    // 배경 원 (전체 크기)
+                    Container(
+                      width: 54.r,
+                      height: 54.r,
+                      decoration: BoxDecoration(
+                        color: cs.primaryContainer.withValues(alpha: 0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: colors.isEmpty
+                          ? Icon(
+                              LucideIcons.ferrisWheel,
+                              size: 26.r,
+                              color: cs.primary.withValues(alpha: 0.6),
+                            )
+                          : null,
+                    ),
+                    ...List.generate(
+                      colors.length.clamp(0, 4),
+                      (i) => Positioned(
+                        left: (i * 10.0).toDouble(),
+                        top: 12.r,
+                        child: Container(
+                          width: 30.r,
+                          height: 30.r,
+                          decoration: BoxDecoration(
+                            color: colors[i],
+                            shape: BoxShape.circle,
+                            border: Border.all(color: cs.surface, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: colors[i].withValues(alpha: 0.3),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
               SizedBox(width: 14.w),
@@ -396,29 +442,65 @@ class _WheelCard extends StatelessWidget {
                         color: cs.onSurface,
                       ),
                     ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      '${wheel.items.length} ${'items'.tr}',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: cs.onSurfaceVariant,
-                      ),
+                    SizedBox(height: 3.h),
+                    Row(
+                      children: [
+                        Icon(
+                          LucideIcons.layoutGrid,
+                          size: 12.r,
+                          color: cs.onSurfaceVariant,
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          '${wheel.items.length} ${'items'.tr}',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                     if (wheel.resultHistory.isNotEmpty)
                       Padding(
-                        padding: EdgeInsets.only(top: 2.h),
-                        child: Text(
-                          '${'last_result'.tr}: ${wheel.resultHistory.first}',
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: cs.primary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        padding: EdgeInsets.only(top: 4.h),
+                        child: Row(
+                          children: [
+                            Icon(
+                              LucideIcons.trophy,
+                              size: 11.r,
+                              color: cs.primary,
+                            ),
+                            SizedBox(width: 4.w),
+                            Expanded(
+                              child: Text(
+                                '${'last_result'.tr}: ${wheel.resultHistory.first}',
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  color: cs.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                   ],
+                ),
+              ),
+              // 스핀 아이콘 힌트
+              Container(
+                margin: EdgeInsets.only(right: 4.w),
+                padding: EdgeInsets.all(8.r),
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Icon(
+                  LucideIcons.rotateCw,
+                  size: 18.r,
+                  color: cs.primary,
                 ),
               ),
               PopupMenuButton<String>(
@@ -431,7 +513,7 @@ class _WheelCard extends StatelessWidget {
                     value: 'rename',
                     child: Row(
                       children: [
-                        const Icon(Icons.edit_rounded, size: 18),
+                        Icon(LucideIcons.pencil, size: 18),
                         SizedBox(width: 8.w),
                         Text('rename_wheel'.tr),
                       ],
@@ -442,7 +524,7 @@ class _WheelCard extends StatelessWidget {
                     child: Row(
                       children: [
                         const Icon(
-                          Icons.delete_rounded,
+                          LucideIcons.trash2,
                           size: 18,
                           color: Colors.red,
                         ),

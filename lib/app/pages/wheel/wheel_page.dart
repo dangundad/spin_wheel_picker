@@ -545,7 +545,7 @@ class _ItemEditSheet extends StatelessWidget {
                   final item = wheel.items[i];
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: Color(item.colorValue),
+                      backgroundColor: Color(item.effectiveColorValue),
                       radius: 12.r,
                     ),
                     title: Text(
@@ -632,21 +632,118 @@ class _ItemEditSheet extends StatelessWidget {
     String current,
   ) {
     final textCtrl = TextEditingController(text: current);
+    final selectedColor =
+        (wheel.items[index].customColorValue).obs;
+
     Get.dialog(
       AlertDialog(
         title: Text('edit_item'.tr),
-        content: TextField(
-          controller: textCtrl,
-          autofocus: true,
-          maxLength: 20,
-          onSubmitted: (_) =>
-              _saveEditItem(ctrl, wheel, index, textCtrl.text, textCtrl),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: textCtrl,
+              autofocus: true,
+              maxLength: 20,
+              decoration: InputDecoration(hintText: 'item_hint'.tr),
+              onSubmitted: (_) => _saveEditItem(
+                ctrl,
+                wheel,
+                index,
+                textCtrl.text,
+                selectedColor.value,
+              ),
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              'item_color'.tr,
+              style: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w600,
+                color: Get.theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Obx(() => Wrap(
+              spacing: 8.w,
+              runSpacing: 8.h,
+              children: [
+                // 자동 (null = 기본값 사용)
+                GestureDetector(
+                  onTap: () => selectedColor.value = null,
+                  child: Container(
+                    width: 32.r,
+                    height: 32.r,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: selectedColor.value == null
+                            ? Get.theme.colorScheme.primary
+                            : Get.theme.colorScheme.outlineVariant,
+                        width: selectedColor.value == null ? 3 : 1.5,
+                      ),
+                      gradient: const LinearGradient(
+                        colors: [Colors.grey, Colors.white],
+                      ),
+                    ),
+                    child: selectedColor.value == null
+                        ? Icon(
+                            Icons.check_rounded,
+                            size: 16.r,
+                            color: Get.theme.colorScheme.primary,
+                          )
+                        : null,
+                  ),
+                ),
+                ...WheelController.presetColors.map((c) {
+                  final isSelected = selectedColor.value == c;
+                  return GestureDetector(
+                    onTap: () => selectedColor.value = c,
+                    child: Container(
+                      width: 32.r,
+                      height: 32.r,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(c),
+                        border: Border.all(
+                          color: isSelected
+                              ? Get.theme.colorScheme.primary
+                              : Colors.transparent,
+                          width: isSelected ? 3 : 0,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(c).withValues(alpha: 0.4),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: isSelected
+                          ? Icon(
+                              Icons.check_rounded,
+                              size: 16.r,
+                              color: Colors.white,
+                            )
+                          : null,
+                    ),
+                  );
+                }),
+              ],
+            )),
+          ],
         ),
         actions: [
           TextButton(onPressed: Get.back, child: Text('cancel'.tr)),
           TextButton(
-            onPressed: () =>
-                _saveEditItem(ctrl, wheel, index, textCtrl.text, textCtrl),
+            onPressed: () => _saveEditItem(
+              ctrl,
+              wheel,
+              index,
+              textCtrl.text,
+              selectedColor.value,
+            ),
             child: Text('save'.tr),
           ),
         ],
@@ -659,11 +756,12 @@ class _ItemEditSheet extends StatelessWidget {
     SpinWheel wheel,
     int index,
     String text,
-    TextEditingController textCtrl,
+    int? customColor,
   ) {
     final label = text.trim();
     if (label.isEmpty) return;
     ctrl.updateItem(wheel, index, label);
+    ctrl.updateItemColor(wheel, index, customColor);
     Get.back();
   }
 }

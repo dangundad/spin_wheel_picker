@@ -19,17 +19,20 @@ class WheelItemAdapter extends TypeAdapter<WheelItem> {
     return WheelItem(
       label: fields[0] as String,
       colorValue: (fields[1] as num).toInt(),
+      customColorValue: fields[2] == null ? null : (fields[2] as num).toInt(),
     );
   }
 
   @override
   void write(BinaryWriter writer, WheelItem obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(3)
       ..writeByte(0)
       ..write(obj.label)
       ..writeByte(1)
-      ..write(obj.colorValue);
+      ..write(obj.colorValue)
+      ..writeByte(2)
+      ..write(obj.customColorValue);
   }
 
   @override

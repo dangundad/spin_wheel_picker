@@ -88,6 +88,12 @@ class Languages extends Translations {
       'item_hint': 'Item label...',
       'open_history': 'History',
       'open_stats': 'Stats',
+
+      // Item color & wheel slots
+      'item_color': 'Item Color',
+      'add_wheel_ad': 'Watch Ad to Add Wheel',
+      'wheel_slots': 'Wheel Slots',
+      'max_wheels': 'Max 3 wheels reached',
     },
     'ko': {
       // 공통
@@ -166,6 +172,12 @@ class Languages extends Translations {
       'item_hint': '항목 이름...',
       'open_history': '히스토리',
       'open_stats': '통계',
+
+      // 항목 색상 & 휠 슬롯
+      'item_color': '항목 색상',
+      'add_wheel_ad': '광고 보고 휠 추가',
+      'wheel_slots': '휠 슬롯',
+      'max_wheels': '최대 3개 휠까지 추가 가능해요',
     },
   };
 }
