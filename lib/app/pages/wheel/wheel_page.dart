@@ -30,6 +30,17 @@ class WheelPage extends GetView<SpinController> {
             tooltip: 'edit'.tr,
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(3),
+          child: Container(
+            height: 3,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [cs.primary, cs.tertiary],
+              ),
+            ),
+          ),
+        ),
       ),
       body: Stack(
         children: [

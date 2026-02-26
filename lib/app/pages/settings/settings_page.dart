@@ -10,7 +10,7 @@ class SettingsPage extends GetView<SettingController> {
 
   static const Map<String, String> _languageOptions = {
     'en': 'English',
-    'ko': '한굵어',
+    'ko': '한국어',
   };
 
   @override
@@ -32,6 +32,17 @@ class SettingsPage extends GetView<SettingController> {
             onPressed: () => _openStats(),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(3),
+          child: Container(
+            height: 3,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [colorScheme.primary, colorScheme.tertiary],
+              ),
+            ),
+          ),
+        ),
       ),
       body: SafeArea(
         child: Obx(
