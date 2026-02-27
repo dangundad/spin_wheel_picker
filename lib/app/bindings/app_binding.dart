@@ -1,6 +1,7 @@
 ﻿import 'package:get/get.dart';
 
 import 'package:spin_wheel_picker/app/admob/ads_rewarded.dart';
+import 'package:spin_wheel_picker/app/services/app_rating_service.dart';
 import 'package:spin_wheel_picker/app/controllers/setting_controller.dart';
 import 'package:spin_wheel_picker/app/controllers/wheel_controller.dart';
 import 'package:spin_wheel_picker/app/services/hive_service.dart';
@@ -48,6 +49,10 @@ class AppBinding implements Bindings {
 
     if (!Get.isRegistered<StatsController>()) {
       Get.lazyPut(() => StatsController());
+    }
+
+    if (!Get.isRegistered<AppRatingService>()) {
+      Get.put(AppRatingService(), permanent: true);
     }
   }
 }
