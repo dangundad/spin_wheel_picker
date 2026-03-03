@@ -94,6 +94,19 @@ class Languages extends Translations {
       'add_wheel_ad': 'Watch Ad to Add Wheel',
       'wheel_slots': 'Wheel Slots',
       'max_wheels': 'Max 3 wheels reached',
+
+      // Settings - additional keys
+      'sound': 'Sound',
+      'sound_desc': 'Play sound effects',
+      'haptic': 'Haptic feedback',
+      'haptic_desc': 'Vibrate for interactions',
+      'ads_consent': 'Advertising consent',
+      'ads_consent_desc': 'Use ad personalization preference',
+      'clear_data': 'Clear local data',
+      'clear_data_desc': 'Reset sound, haptic, consent, language and history logs.',
+      'clear_data_confirm': 'This removes all local settings and logs. Continue?',
+      'confirm': 'Confirm',
+      'clear_data_complete': 'All local data has been reset.',
     },
     'ko': {
       // 공통
@@ -178,6 +191,19 @@ class Languages extends Translations {
       'add_wheel_ad': '광고 보고 휠 추가',
       'wheel_slots': '휠 슬롯',
       'max_wheels': '최대 3개 휠까지 추가 가능해요',
+
+      // 설정 - 추가 키
+      'sound': '사운드',
+      'sound_desc': '효과음을 재생해요',
+      'haptic': '햅틱 피드백',
+      'haptic_desc': '상호작용 시 진동해요',
+      'ads_consent': '광고 동의',
+      'ads_consent_desc': '광고 개인화 설정을 사용해요',
+      'clear_data': '로컬 데이터 초기화',
+      'clear_data_desc': '사운드, 햅틱, 동의, 언어, 기록 로그를 초기화해요.',
+      'clear_data_confirm': '모든 로컬 설정과 기록이 삭제돼요. 계속할까요?',
+      'confirm': '확인',
+      'clear_data_complete': '모든 로컬 데이터를 초기화했어요.',
     },
   };
 }
