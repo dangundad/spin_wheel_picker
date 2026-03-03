@@ -1,10 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:vibration/vibration.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:spin_wheel_picker/app/controllers/setting_controller.dart';
 import 'package:spin_wheel_picker/app/controllers/wheel_controller.dart';
 import 'package:spin_wheel_picker/app/data/models/spin_wheel.dart';
 import 'package:spin_wheel_picker/app/data/models/wheel_item.dart';
@@ -29,6 +30,8 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
   List<WheelItem> get displayItems =>
       isSpinning.value && _spinItems.isNotEmpty ? _spinItems : wheel.items;
 
+  bool _hasVibrator = false;
+
   final isSpinning = false.obs;
   final angle = 0.0.obs;
   final winner = Rx<WheelItem?>(null);
@@ -38,6 +41,7 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
   @override
   void onInit() {
     super.onInit();
+    Vibration.hasVibrator().then((v) => _hasVibrator = v);
     final loaded = HiveService.to.wheelsBox.get(wheelId);
     if (loaded == null) {
       // Wheel was deleted externally; pop back to home gracefully
@@ -56,6 +60,10 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
     super.onClose();
   }
 
+  bool get _hapticOn =>
+      !Get.isRegistered<SettingController>() ||
+      SettingController.to.hapticEnabled.value;
+
   void _onTick() {
     final newAngle =
         _fromAngle +
@@ -70,7 +78,7 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
           (((2 * math.pi - normalized) % (2 * math.pi)) / segAngle).floor() %
           n;
       if (_lastSectionIndex != -1 && sectionIdx != _lastSectionIndex) {
-        HapticFeedback.selectionClick();
+        if (_hapticOn && _hasVibrator) Vibration.vibrate(duration: 30);
       }
       _lastSectionIndex = sectionIdx;
     }
@@ -88,7 +96,7 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
     // with what was painted, regardless of any later edits.
     _spinItems = List<WheelItem>.from(wheel.items);
 
-    HapticFeedback.mediumImpact();
+    if (_hapticOn && _hasVibrator) Vibration.vibrate(duration: 100);
 
     final rng = math.Random();
     _fromAngle = angle.value;
@@ -106,7 +114,7 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
       final normalized = _toAngle % (2 * math.pi);
       angle.value = normalized;
       isSpinning.value = false;
-      HapticFeedback.mediumImpact();
+      if (_hapticOn && _hasVibrator) Vibration.vibrate(duration: 100);
       _determineWinner(normalized);
     });
   }
@@ -138,7 +146,7 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
   Future<void> shareResult() async {
     final w = winner.value;
     if (w == null) return;
-    HapticFeedback.lightImpact();
+    if (_hapticOn && _hasVibrator) Vibration.vibrate(duration: 50);
     await SharePlus.instance.share(
       ShareParams(
         text: '🎡 Spin Result: ${w.label}\n\nSpun on: ${wheel.name}',
@@ -147,7 +155,7 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
   }
 
   Future<void> shareHistoryItem(String label) async {
-    HapticFeedback.lightImpact();
+    if (_hapticOn && _hasVibrator) Vibration.vibrate(duration: 50);
     await SharePlus.instance.share(
       ShareParams(
         text: '🎡 Spin Result: $label\n\nSpun on: ${wheel.name}',
