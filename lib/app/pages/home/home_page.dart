@@ -14,8 +14,8 @@ class HomePage extends GetView<WheelController> {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+  Widget build(BuildContext _) {
+    final cs = Get.theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -297,8 +297,8 @@ class _EmptyState extends StatelessWidget {
   const _EmptyState({required this.onAdd});
 
   @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+  Widget build(BuildContext _) {
+    final cs = Get.theme.colorScheme;
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -353,8 +353,8 @@ class _WheelCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+  Widget build(BuildContext _) {
+    final cs = Get.theme.colorScheme;
     final colors = wheel.items.map((i) => Color(i.effectiveColorValue)).toList();
 
     return Container(

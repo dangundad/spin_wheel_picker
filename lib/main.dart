@@ -20,7 +20,7 @@ import 'package:spin_wheel_picker/app/admob/ads_rewarded.dart';
 import 'package:spin_wheel_picker/app/bindings/app_binding.dart';
 import 'package:spin_wheel_picker/app/routes/app_pages.dart';
 import 'package:spin_wheel_picker/app/services/hive_service.dart';
-import 'package:spin_wheel_picker/app/theme/app_theme.dart';
+import 'package:spin_wheel_picker/app/theme/app_flex_theme.dart';
 import 'package:spin_wheel_picker/app/translate/translate.dart';
 
 Future<void> main() async {
@@ -86,8 +86,8 @@ class SpinWheelPickerApp extends StatelessWidget {
       fallbackLocale: const Locale('en'),
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
+      theme: AppFlexTheme.light,
+      darkTheme: AppFlexTheme.dark,
       home: const Scaffold(body: SizedBox.shrink()),
     );
   }
@@ -117,8 +117,8 @@ class SpinWheelPickerApp extends StatelessWidget {
           defaultTransition: Transition.fadeIn,
           initialBinding: AppBinding(),
           themeMode: ThemeMode.system,
-          theme: AppTheme.light,
-          darkTheme: AppTheme.dark,
+          theme: AppFlexTheme.light,
+          darkTheme: AppFlexTheme.dark,
           scrollBehavior: ScrollBehavior().copyWith(overscroll: false),
           navigatorKey: Get.key,
           getPages: AppPages.routes,

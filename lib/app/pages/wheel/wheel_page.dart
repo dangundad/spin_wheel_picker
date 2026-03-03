@@ -16,8 +16,8 @@ class WheelPage extends GetView<SpinController> {
   const WheelPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+  Widget build(BuildContext _) {
+    final cs = Get.theme.colorScheme;
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -162,8 +162,8 @@ class _SpinButtonState extends State<_SpinButton>
   }
 
   @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+  Widget build(BuildContext _) {
+    final cs = Get.theme.colorScheme;
     return Obx(() {
       final spinning = widget.ctrl.isSpinning.value;
       // Stop breathing animation while spinning
@@ -383,8 +383,8 @@ class _HistorySection extends StatelessWidget {
   const _HistorySection({required this.ctrl});
 
   @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+  Widget build(BuildContext _) {
+    final cs = Get.theme.colorScheme;
     return Obx(() {
       final history = ctrl.wheel.resultHistory;
       if (history.isEmpty) {
@@ -503,7 +503,7 @@ class _ItemEditSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final cs = Get.theme.colorScheme;
     final ctrl = WheelController.to;
 
     return Container(
