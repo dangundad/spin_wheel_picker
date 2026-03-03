@@ -513,7 +513,7 @@ class _WheelCard extends StatelessWidget {
                     value: 'rename',
                     child: Row(
                       children: [
-                        Icon(LucideIcons.pencil, size: 18),
+                        Icon(LucideIcons.pencil, size: 18.r),
                         SizedBox(width: 8.w),
                         Text('rename_wheel'.tr),
                       ],
