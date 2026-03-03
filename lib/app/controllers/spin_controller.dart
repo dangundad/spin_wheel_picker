@@ -21,6 +21,14 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
   double _toAngle = 0;
   int _lastSectionIndex = -1;
 
+  // Snapshot of items taken when spin() starts, used by _determineWinner
+  // to guarantee the result always matches what was visually spinning.
+  List<WheelItem> _spinItems = [];
+
+  /// Returns the items being displayed: snapshot during spin, live list when idle.
+  List<WheelItem> get displayItems =>
+      isSpinning.value && _spinItems.isNotEmpty ? _spinItems : wheel.items;
+
   final isSpinning = false.obs;
   final angle = 0.0.obs;
   final winner = Rx<WheelItem?>(null);
@@ -30,7 +38,14 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
   @override
   void onInit() {
     super.onInit();
-    wheel = HiveService.to.wheelsBox.get(wheelId)!;
+    final loaded = HiveService.to.wheelsBox.get(wheelId);
+    if (loaded == null) {
+      // Wheel was deleted externally; pop back to home gracefully
+      wheel = SpinWheel(id: wheelId, name: '', items: []);
+      WidgetsBinding.instance.addPostFrameCallback((_) => Get.back());
+    } else {
+      wheel = loaded;
+    }
     _animCtrl = AnimationController(vsync: this, duration: Duration.zero);
   }
 
@@ -47,7 +62,7 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
         (_toAngle - _fromAngle) * Curves.easeOut.transform(_animCtrl.value);
     angle.value = newAngle;
 
-    final n = wheel.items.length;
+    final n = _spinItems.length;
     if (n > 0) {
       final segAngle = (2 * math.pi) / n;
       final normalized = newAngle % (2 * math.pi);
@@ -69,6 +84,9 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
     showConfetti.value = false;
     isSpinning.value = true;
     _lastSectionIndex = -1;
+    // Snapshot items at spin-start so winner calculation is consistent
+    // with what was painted, regardless of any later edits.
+    _spinItems = List<WheelItem>.from(wheel.items);
 
     HapticFeedback.mediumImpact();
 
@@ -81,6 +99,7 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
 
     _animCtrl.duration = const Duration(milliseconds: 4500);
     _animCtrl.reset();
+    _animCtrl.removeListener(_onTick); // defensive: remove before re-adding
     _animCtrl.addListener(_onTick);
     _animCtrl.forward().then((_) {
       _animCtrl.removeListener(_onTick);
@@ -93,18 +112,19 @@ class SpinController extends GetxController with GetTickerProviderStateMixin {
   }
 
   void _determineWinner(double normalizedAngle) {
-    final n = wheel.items.length;
+    final n = _spinItems.length;
     if (n == 0) return;
     final segAngle = (2 * math.pi) / n;
     final idx =
         (((2 * math.pi - normalizedAngle) % (2 * math.pi)) / segAngle)
             .floor() %
         n;
-    winner.value = wheel.items[idx];
+    final winnerItem = _spinItems[idx];
+    winner.value = winnerItem;
     showResult.value = true;
     showConfetti.value = true;
 
-    wheel.resultHistory.insert(0, wheel.items[idx].label);
+    wheel.resultHistory.insert(0, winnerItem.label);
     if (wheel.resultHistory.length > 20) wheel.resultHistory.removeLast();
     wheel.save();
     WheelController.to.wheels.refresh();
