@@ -24,11 +24,13 @@ class WheelPage extends GetView<SpinController> {
       appBar: AppBar(
         title: Text(controller.wheel.name),
         actions: [
-          IconButton(
+          Obx(() => IconButton(
             icon: const Icon(Icons.edit_rounded),
-            onPressed: () => _showEditSheet(controller.wheel),
+            onPressed: controller.isSpinning.value
+                ? null
+                : () => _showEditSheet(controller.wheel),
             tooltip: 'edit'.tr,
-          ),
+          )),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(3),
@@ -59,7 +61,7 @@ class WheelPage extends GetView<SpinController> {
                           child: Obx(() {
                             return CustomPaint(
                               painter: WheelPainter(
-                                items: controller.wheel.items,
+                                items: controller.displayItems,
                                 angle: controller.angle.value,
                               ),
                               child: const SizedBox.expand(),
@@ -610,25 +612,24 @@ class _ItemEditSheet extends StatelessWidget {
           maxLength: 20,
           decoration: InputDecoration(hintText: 'item_hint'.tr),
           onSubmitted: (_) =>
-              _saveNewItem(ctrl, wheel, textCtrl.text, textCtrl),
+              _saveNewItem(ctrl, wheel, textCtrl.text),
         ),
         actions: [
           TextButton(onPressed: Get.back, child: Text('cancel'.tr)),
           TextButton(
             onPressed: () =>
-                _saveNewItem(ctrl, wheel, textCtrl.text, textCtrl),
+                _saveNewItem(ctrl, wheel, textCtrl.text),
             child: Text('add'.tr),
           ),
         ],
       ),
-    );
+    ).then((_) => textCtrl.dispose());
   }
 
   void _saveNewItem(
     WheelController ctrl,
     SpinWheel wheel,
     String text,
-    TextEditingController textCtrl,
   ) {
     final label = text.trim();
     if (label.isEmpty) return;
@@ -759,7 +760,7 @@ class _ItemEditSheet extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ).then((_) => textCtrl.dispose());
   }
 
   void _saveEditItem(
