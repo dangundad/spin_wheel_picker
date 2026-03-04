@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:spin_wheel_picker/app/admob/ads_banner.dart';
 import 'package:spin_wheel_picker/app/admob/ads_helper.dart';
@@ -23,6 +24,9 @@ class WheelPage extends GetView<SpinController> {
       backgroundColor: cs.surface,
       appBar: AppBar(
         title: Text(controller.wheel.name),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: cs.surface,
         actions: [
           Obx(() => IconButton(
             icon: const Icon(Icons.edit_rounded),
@@ -511,117 +515,208 @@ class _ItemEditSheet extends StatelessWidget {
         color: cs.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
-      padding: EdgeInsets.only(
-        top: 12.h,
-        left: 16.w,
-        right: 16.w,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24.h,
-      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
+            margin: EdgeInsets.only(top: 12.h, bottom: 8.h),
             width: 40.w,
             height: 4.h,
             decoration: BoxDecoration(
-              color: cs.onSurfaceVariant.withValues(alpha: 0.3),
+              color: cs.outlineVariant,
               borderRadius: BorderRadius.circular(2.r),
             ),
           ),
-          SizedBox(height: 16.h),
-          Row(
-            children: [
-              Text(
-                'edit_items'.tr,
-                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w800),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [cs.primaryContainer.withValues(alpha: 0.5), cs.surface],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: wheel.items.length >= 20
-                    ? null
-                    : () => _showAddItemDialog(ctrl, wheel),
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text('add'.tr),
-              ),
-            ],
+            ),
+            child: Row(
+              children: [
+                Text(
+                  'edit_items'.tr,
+                  style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: wheel.items.length >= 20
+                      ? null
+                      : () => _showAddItemDialog(ctrl, wheel),
+                  icon: Icon(LucideIcons.circlePlus, size: 16.r),
+                  label: Text('add'.tr),
+                ),
+                IconButton(
+                  icon: Icon(LucideIcons.x, size: 20.r),
+                  onPressed: Get.back,
+                ),
+              ],
+            ),
           ),
-          SizedBox(height: 8.h),
-          Obx(() {
-            ctrl.wheels.length; // trigger rebuild
-            return ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: 320.h),
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: wheel.items.length,
-                separatorBuilder: (ctx, i) => const Divider(height: 1),
-                itemBuilder: (ctx, i) {
-                  final item = wheel.items[i];
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Color(item.effectiveColorValue),
-                      radius: 12.r,
-                    ),
-                    title: Text(
-                      item.label,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
+          Padding(
+            padding: EdgeInsets.only(
+              left: 16.w,
+              right: 16.w,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24.h,
+            ),
+            child: Obx(() {
+              ctrl.wheels.length; // trigger rebuild
+              return ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: 320.h),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: wheel.items.length,
+                  separatorBuilder: (ctx, i) => const Divider(height: 1),
+                  itemBuilder: (ctx, i) {
+                    final item = wheel.items[i];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Color(item.effectiveColorValue),
+                        radius: 12.r,
                       ),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit_rounded, size: 18),
-                          onPressed: () =>
-                              _showEditItemDialog(ctrl, wheel, i, item.label),
+                      title: Text(
+                        item.label,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
                         ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.delete_rounded,
-                            size: 18,
-                            color: wheel.items.length <= 2
-                                ? cs.onSurfaceVariant.withValues(alpha: 0.3)
-                                : cs.error,
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit_rounded, size: 18),
+                            onPressed: () =>
+                                _showEditItemDialog(ctrl, wheel, i, item.label),
                           ),
-                          onPressed: wheel.items.length <= 2
-                              ? null
-                              : () => ctrl.removeItem(wheel, i),
-                        ),
-                      ],
-                    ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 8.w),
-                  );
-                },
-              ),
-            );
-          }),
+                          IconButton(
+                            icon: Icon(
+                              Icons.delete_rounded,
+                              size: 18,
+                              color: wheel.items.length <= 2
+                                  ? cs.onSurfaceVariant.withValues(alpha: 0.3)
+                                  : cs.error,
+                            ),
+                            onPressed: wheel.items.length <= 2
+                                ? null
+                                : () => ctrl.removeItem(wheel, i),
+                          ),
+                        ],
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8.w),
+                    );
+                  },
+                ),
+              );
+            }),
+          ),
         ],
       ),
     );
   }
 
   void _showAddItemDialog(WheelController ctrl, SpinWheel wheel) {
+    final cs = Get.theme.colorScheme;
     final textCtrl = TextEditingController();
     Get.dialog(
-      AlertDialog(
-        title: Text('add_item'.tr),
-        content: TextField(
-          controller: textCtrl,
-          autofocus: true,
-          maxLength: 20,
-          decoration: InputDecoration(hintText: 'item_hint'.tr),
-          onSubmitted: (_) =>
-              _saveNewItem(ctrl, wheel, textCtrl.text),
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 20.h),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cs.primaryContainer, cs.primary.withValues(alpha: 0.3)],
+                ),
+              ),
+              child: Center(
+                child: Container(
+                  width: 52.r,
+                  height: 52.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: cs.primary.withValues(alpha: 0.15),
+                  ),
+                  child: Icon(LucideIcons.circlePlus, size: 26.r, color: cs.primary),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 8.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'add_item'.tr,
+                    style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700),
+                  ),
+                  SizedBox(height: 12.h),
+                  TextField(
+                    controller: textCtrl,
+                    autofocus: true,
+                    maxLength: 20,
+                    decoration: InputDecoration(
+                      hintText: 'item_hint'.tr,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                    ),
+                    onSubmitted: (_) => _saveNewItem(ctrl, wheel, textCtrl.text),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 16.h),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: Get.back,
+                      child: Text('cancel'.tr),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [cs.primary, cs.tertiary]),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12.r),
+                          onTap: () => _saveNewItem(ctrl, wheel, textCtrl.text),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                            child: Center(
+                              child: Text(
+                                'add'.tr,
+                                style: TextStyle(
+                                  color: cs.onPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: Get.back, child: Text('cancel'.tr)),
-          TextButton(
-            onPressed: () =>
-                _saveNewItem(ctrl, wheel, textCtrl.text),
-            child: Text('add'.tr),
-          ),
-        ],
       ),
     ).then((_) => textCtrl.dispose());
   }
@@ -643,122 +738,194 @@ class _ItemEditSheet extends StatelessWidget {
     int index,
     String current,
   ) {
+    final cs = Get.theme.colorScheme;
     final textCtrl = TextEditingController(text: current);
     final selectedColor =
         (wheel.items[index].customColorValue).obs;
 
     Get.dialog(
-      AlertDialog(
-        title: Text('edit_item'.tr),
-        content: Column(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: textCtrl,
-              autofocus: true,
-              maxLength: 20,
-              decoration: InputDecoration(hintText: 'item_hint'.tr),
-              onSubmitted: (_) => _saveEditItem(
-                ctrl,
-                wheel,
-                index,
-                textCtrl.text,
-                selectedColor.value,
-              ),
-            ),
-            SizedBox(height: 12.h),
-            Text(
-              'item_color'.tr,
-              style: TextStyle(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w600,
-                color: Get.theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Obx(() => Wrap(
-              spacing: 8.w,
-              runSpacing: 8.h,
-              children: [
-                // 자동 (null = 기본값 사용)
-                GestureDetector(
-                  onTap: () => selectedColor.value = null,
-                  child: Container(
-                    width: 32.r,
-                    height: 32.r,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: selectedColor.value == null
-                            ? Get.theme.colorScheme.primary
-                            : Get.theme.colorScheme.outlineVariant,
-                        width: selectedColor.value == null ? 3 : 1.5,
-                      ),
-                      gradient: const LinearGradient(
-                        colors: [Colors.grey, Colors.white],
-                      ),
-                    ),
-                    child: selectedColor.value == null
-                        ? Icon(
-                            Icons.check_rounded,
-                            size: 16.r,
-                            color: Get.theme.colorScheme.primary,
-                          )
-                        : null,
-                  ),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 20.h),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cs.primaryContainer, cs.primary.withValues(alpha: 0.3)],
                 ),
-                ...WheelController.presetColors.map((c) {
-                  final isSelected = selectedColor.value == c;
-                  return GestureDetector(
-                    onTap: () => selectedColor.value = c,
-                    child: Container(
-                      width: 32.r,
-                      height: 32.r,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(c),
-                        border: Border.all(
-                          color: isSelected
-                              ? Get.theme.colorScheme.primary
-                              : Colors.transparent,
-                          width: isSelected ? 3 : 0,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(c).withValues(alpha: 0.4),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+              ),
+              child: Center(
+                child: Container(
+                  width: 52.r,
+                  height: 52.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: cs.primary.withValues(alpha: 0.15),
+                  ),
+                  child: Icon(LucideIcons.pencil, size: 26.r, color: cs.primary),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 8.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'edit_item'.tr,
+                    style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700),
+                  ),
+                  SizedBox(height: 12.h),
+                  TextField(
+                    controller: textCtrl,
+                    autofocus: true,
+                    maxLength: 20,
+                    decoration: InputDecoration(
+                      hintText: 'item_hint'.tr,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
-                      child: isSelected
-                          ? Icon(
-                              Icons.check_rounded,
-                              size: 16.r,
-                              color: Colors.white,
-                            )
-                          : null,
                     ),
-                  );
-                }),
-              ],
-            )),
+                    onSubmitted: (_) => _saveEditItem(
+                      ctrl,
+                      wheel,
+                      index,
+                      textCtrl.text,
+                      selectedColor.value,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    'item_color'.tr,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Obx(() => Wrap(
+                    spacing: 8.w,
+                    runSpacing: 8.h,
+                    children: [
+                      GestureDetector(
+                        onTap: () => selectedColor.value = null,
+                        child: Container(
+                          width: 32.r,
+                          height: 32.r,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: selectedColor.value == null
+                                  ? cs.primary
+                                  : cs.outlineVariant,
+                              width: selectedColor.value == null ? 3 : 1.5,
+                            ),
+                            gradient: const LinearGradient(
+                              colors: [Colors.grey, Colors.white],
+                            ),
+                          ),
+                          child: selectedColor.value == null
+                              ? Icon(
+                                  Icons.check_rounded,
+                                  size: 16.r,
+                                  color: cs.primary,
+                                )
+                              : null,
+                        ),
+                      ),
+                      ...WheelController.presetColors.map((c) {
+                        final isSelected = selectedColor.value == c;
+                        return GestureDetector(
+                          onTap: () => selectedColor.value = c,
+                          child: Container(
+                            width: 32.r,
+                            height: 32.r,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(c),
+                              border: Border.all(
+                                color: isSelected
+                                    ? cs.primary
+                                    : Colors.transparent,
+                                width: isSelected ? 3 : 0,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(c).withValues(alpha: 0.4),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: isSelected
+                                ? Icon(
+                                    Icons.check_rounded,
+                                    size: 16.r,
+                                    color: Colors.white,
+                                  )
+                                : null,
+                          ),
+                        );
+                      }),
+                    ],
+                  )),
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 16.h),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: Get.back,
+                      child: Text('cancel'.tr),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [cs.primary, cs.tertiary]),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12.r),
+                          onTap: () => _saveEditItem(
+                            ctrl,
+                            wheel,
+                            index,
+                            textCtrl.text,
+                            selectedColor.value,
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                            child: Center(
+                              child: Text(
+                                'save'.tr,
+                                style: TextStyle(
+                                  color: cs.onPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: Get.back, child: Text('cancel'.tr)),
-          TextButton(
-            onPressed: () => _saveEditItem(
-              ctrl,
-              wheel,
-              index,
-              textCtrl.text,
-              selectedColor.value,
-            ),
-            child: Text('save'.tr),
-          ),
-        ],
       ),
     ).then((_) => textCtrl.dispose());
   }

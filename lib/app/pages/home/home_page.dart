@@ -107,61 +107,128 @@ class HomePage extends GetView<WheelController> {
   }
 
   void _showAddDialog() {
+    final cs = Get.theme.colorScheme;
     final textCtrl = TextEditingController();
     final needsAd = controller.wheels.isNotEmpty;
     Get.dialog(
-      AlertDialog(
-        title: Text('new_wheel'.tr),
-        content: Column(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: textCtrl,
-              autofocus: true,
-              maxLength: 30,
-              decoration: InputDecoration(
-                hintText: 'wheel_name_hint'.tr,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 20.h),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cs.primaryContainer, cs.primary.withValues(alpha: 0.3)],
                 ),
               ),
-              onSubmitted: (_) => _saveWheel(textCtrl.text, needsAd),
+              child: Center(
+                child: Container(
+                  width: 52.r,
+                  height: 52.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: cs.primary.withValues(alpha: 0.15),
+                  ),
+                  child: Icon(LucideIcons.ferrisWheel, size: 26.r, color: cs.primary),
+                ),
+              ),
             ),
-            if (needsAd) ...[
-              SizedBox(height: 8.h),
-              Obx(() {
-                final ready = Get.isRegistered<RewardedAdManager>() &&
-                    RewardedAdManager.to.isAdReady.value;
-                return Row(
-                  children: [
-                    Icon(
-                      Icons.ondemand_video_rounded,
-                      size: 16.r,
-                      color: ready
-                          ? Get.theme.colorScheme.tertiary
-                          : Get.theme.colorScheme.onSurfaceVariant,
-                    ),
-                    SizedBox(width: 6.w),
-                    Text(
-                      'add_wheel_ad'.tr,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Get.theme.colorScheme.onSurfaceVariant,
+            Padding(
+              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 8.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'new_wheel'.tr,
+                    style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700),
+                  ),
+                  SizedBox(height: 12.h),
+                  TextField(
+                    controller: textCtrl,
+                    autofocus: true,
+                    maxLength: 30,
+                    decoration: InputDecoration(
+                      hintText: 'wheel_name_hint'.tr,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
                     ),
+                    onSubmitted: (_) => _saveWheel(textCtrl.text, needsAd),
+                  ),
+                  if (needsAd) ...[
+                    SizedBox(height: 4.h),
+                    Obx(() {
+                      final ready = Get.isRegistered<RewardedAdManager>() &&
+                          RewardedAdManager.to.isAdReady.value;
+                      return Row(
+                        children: [
+                          Icon(
+                            LucideIcons.monitorPlay,
+                            size: 14.r,
+                            color: ready ? cs.tertiary : cs.onSurfaceVariant,
+                          ),
+                          SizedBox(width: 6.w),
+                          Text(
+                            'add_wheel_ad'.tr,
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
                   ],
-                );
-              }),
-            ],
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 16.h),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: Get.back,
+                      child: Text('cancel'.tr),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [cs.primary, cs.tertiary]),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12.r),
+                          onTap: () => _saveWheel(textCtrl.text, needsAd),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                            child: Center(
+                              child: Text(
+                                needsAd ? 'add_wheel_ad'.tr : 'create'.tr,
+                                style: TextStyle(
+                                  color: cs.onPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: Get.back, child: Text('cancel'.tr)),
-          FilledButton(
-            onPressed: () => _saveWheel(textCtrl.text, needsAd),
-            child: Text(needsAd ? 'add_wheel_ad'.tr : 'create'.tr),
-          ),
-        ],
       ),
     );
   }
@@ -178,26 +245,102 @@ class HomePage extends GetView<WheelController> {
   }
 
   void _showRenameDialog(SpinWheel wheel) {
+    final cs = Get.theme.colorScheme;
     final textCtrl = TextEditingController(text: wheel.name);
     Get.dialog(
-      AlertDialog(
-        title: Text('rename_wheel'.tr),
-        content: TextField(
-          controller: textCtrl,
-          autofocus: true,
-          maxLength: 30,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
-          ),
-          onSubmitted: (_) => _saveRename(wheel, textCtrl.text),
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 20.h),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cs.primaryContainer, cs.primary.withValues(alpha: 0.3)],
+                ),
+              ),
+              child: Center(
+                child: Container(
+                  width: 52.r,
+                  height: 52.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: cs.primary.withValues(alpha: 0.15),
+                  ),
+                  child: Icon(LucideIcons.pencil, size: 26.r, color: cs.primary),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 8.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'rename_wheel'.tr,
+                    style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700),
+                  ),
+                  SizedBox(height: 12.h),
+                  TextField(
+                    controller: textCtrl,
+                    autofocus: true,
+                    maxLength: 30,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                    ),
+                    onSubmitted: (_) => _saveRename(wheel, textCtrl.text),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 16.h),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: Get.back,
+                      child: Text('cancel'.tr),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [cs.primary, cs.tertiary]),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12.r),
+                          onTap: () => _saveRename(wheel, textCtrl.text),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                            child: Center(
+                              child: Text(
+                                'save'.tr,
+                                style: TextStyle(
+                                  color: cs.onPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: Get.back, child: Text('cancel'.tr)),
-          FilledButton(
-            onPressed: () => _saveRename(wheel, textCtrl.text),
-            child: Text('save'.tr),
-          ),
-        ],
       ),
     );
   }
@@ -210,21 +353,97 @@ class HomePage extends GetView<WheelController> {
   }
 
   void _confirmDelete(SpinWheel wheel) {
+    final cs = Get.theme.colorScheme;
     Get.dialog(
-      AlertDialog(
-        title: Text('delete'.tr),
-        content: Text('delete_wheel_confirm'.tr),
-        actions: [
-          TextButton(onPressed: Get.back, child: Text('cancel'.tr)),
-          FilledButton(
-            onPressed: () {
-              controller.deleteWheel(wheel);
-              Get.back();
-            },
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('delete'.tr, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 20.h),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cs.errorContainer, cs.error.withValues(alpha: 0.3)],
+                ),
+              ),
+              child: Center(
+                child: Container(
+                  width: 52.r,
+                  height: 52.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: cs.error.withValues(alpha: 0.15),
+                  ),
+                  child: Icon(LucideIcons.trash2, size: 26.r, color: cs.error),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 8.h),
+              child: Column(
+                children: [
+                  Text(
+                    'delete'.tr,
+                    style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'delete_wheel_confirm'.tr,
+                    style: TextStyle(fontSize: 14.sp, color: cs.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: Get.back,
+                      child: Text('cancel'.tr),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [cs.error, cs.errorContainer]),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12.r),
+                          onTap: () {
+                            controller.deleteWheel(wheel);
+                            Get.back();
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                            child: Center(
+                              child: Text(
+                                'delete'.tr,
+                                style: TextStyle(
+                                  color: cs.onError,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
