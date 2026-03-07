@@ -61,7 +61,12 @@ class Languages extends Translations {
       'purchase_success': 'Purchase Completed',
       'premium_ready': 'Premium is now active.',
       'send_feedback': 'Send Feedback',
+      'feedback_email_subject': 'Spin Wheel Picker Feedback',
       'more_apps': 'More Apps',
+      'link_open_error': 'This link could not be opened right now.',
+      'more_apps_desc': 'Explore more apps from DangunDad',
+      'privacy_policy_desc': 'Read how local data and permissions are handled',
+      'rate_app_desc': 'Leave a review on the store',
 
       // App-specific
       'app_name': 'Spin Wheel',
@@ -159,7 +164,12 @@ class Languages extends Translations {
       'purchase_success': '결제 완료',
       'premium_ready': '프리미엄이 활성화됐어요.',
       'send_feedback': '피드백 보내기',
+      'feedback_email_subject': 'Spin Wheel Picker 피드백',
       'more_apps': '더 많은 앱',
+      'link_open_error': '지금은 이 링크를 열 수 없습니다.',
+      'more_apps_desc': 'DangunDad의 다른 앱을 확인하세요',
+      'privacy_policy_desc': '로컬 데이터와 권한 처리 방식을 확인하세요',
+      'rate_app_desc': '스토어에 리뷰를 남겨주세요',
       // 앱 전용
       'app_name': '스핀 휠',
       'spin': '돌리기',
@@ -207,6 +217,5 @@ class Languages extends Translations {
     },
   };
 }
-
 
 

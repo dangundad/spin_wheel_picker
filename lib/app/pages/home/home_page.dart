@@ -21,7 +21,7 @@ class HomePage extends GetView<WheelController> {
       appBar: AppBar(
         title: Row(
           children: [
-            const Text('🎡', style: TextStyle(fontSize: 22)),
+            Text('🎡', style: TextStyle(fontSize: 22.sp)),
             SizedBox(width: 8.w),
             Text(
               'app_name'.tr,

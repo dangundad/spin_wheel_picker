@@ -589,14 +589,14 @@ class _ItemEditSheet extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.edit_rounded, size: 18),
+                            icon: Icon(Icons.edit_rounded, size: 18.r),
                             onPressed: () =>
                                 _showEditItemDialog(ctrl, wheel, i, item.label),
                           ),
                           IconButton(
                             icon: Icon(
                               Icons.delete_rounded,
-                              size: 18,
+                              size: 18.r,
                               color: wheel.items.length <= 2
                                   ? cs.onSurfaceVariant.withValues(alpha: 0.3)
                                   : cs.error,

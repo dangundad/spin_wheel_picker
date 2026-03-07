@@ -129,6 +129,63 @@ class SettingsPage extends GetView<SettingController> {
                 ],
               ),
               SizedBox(height: 14.h),
+              _group(
+                colorScheme: colorScheme,
+                icon: Icons.support_agent,
+                title: _loc('send_feedback', 'Support'),
+                children: [
+                  ListTile(
+                    key: const ValueKey('settings-rate-app-tile'),
+                    leading: const Icon(Icons.star_rate_rounded),
+                    title: Text(_loc('rate_app', 'Rate App')),
+                    subtitle: Text(
+                      _loc('rate_app_desc', 'Leave a review on the store'),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: controller.rateApp,
+                  ),
+                  ListTile(
+                    key: const ValueKey('settings-send-feedback-tile'),
+                    leading: const Icon(Icons.feedback_outlined),
+                    title: Text(_loc('send_feedback', 'Send Feedback')),
+                    subtitle: Text(
+                      _loc(
+                        'feedback_desc',
+                        'Share your ideas and issue reports',
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: controller.sendFeedback,
+                  ),
+                  ListTile(
+                    key: const ValueKey('settings-more-apps-tile'),
+                    leading: const Icon(Icons.apps_rounded),
+                    title: Text(_loc('more_apps', 'More Apps')),
+                    subtitle: Text(
+                      _loc(
+                        'more_apps_desc',
+                        'Explore more apps from DangunDad',
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: controller.openMoreApps,
+                  ),
+                  ListTile(
+                    key: const ValueKey('settings-privacy-policy-tile'),
+                    leading: const Icon(Icons.privacy_tip_outlined),
+                    title: Text(_loc('privacy_policy', 'Privacy Policy')),
+                    subtitle: Text(
+                      _loc(
+                        'privacy_policy_desc',
+                        'Read how local data and permissions are handled',
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: controller.openPrivacyPolicy,
+                  ),
+                ],
+              ),
+              SizedBox(height: 14.h),
             ],
           ),
         ),
@@ -275,5 +332,4 @@ String _loc(String key, String fallback) {
   final translated = key.tr;
   return translated == key ? fallback : translated;
 }
-
 
